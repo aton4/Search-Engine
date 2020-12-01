@@ -37,12 +37,28 @@ def parseDocumentStorage(path):
             
             fileSoup = BeautifulSoup(fileDataDictionary["content"], "html.parser")
             textualContent = fileSoup.get_text()
+           
+            #sdadasda
+
+            impSet = set()
+            for b in fileSoup.find_all(["b", "strong", "h1", "h2", "h3", "title"]):
+                bTextList = tokenizeText(b.text)
+                for impTerm in bTextList:
+                    impTermStem = portStem.stem(impTerm)
+                    impSet.add(impTermStem)
+
+            #sdadasdas
 
             tokenList = tokenizeText(textualContent)
             tokenFrequencyDict = computeWordFrequencies(tokenList)
             for termStem in tokenFrequencyDict: 
-                tokenCount = tokenCount + 1
-                token_to_postings[termStem].append([idCounter,tokenFrequencyDict[termStem]])
+                # tokenCount = tokenCount + 1
+                impMultiplier = 1
+                if(termStem in impSet):
+                    print("inside ", termStem)
+                    impMultiplier = 1.5
+                termTf = 1 + math.log(tokenFrequencyDict[termStem] * impMultiplier, 10)
+                token_to_postings[termStem].append( [idCounter, termTf] )
             
                 
             if(idCounter == third_docs or idCounter == third_docs*2 or idCounter==total_docs):
@@ -81,6 +97,12 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
                 offset2 = index_two[index_two_keys[index2]] 
                 dataFile2.seek(offset2)
                 list2 = json.loads(dataFile2.readline()) # postings lists1
+                
+                if(new_file == "finalmerge.txt"):
+                    idf = math.log( (55393.0 / len(list2)) , 10)
+                    for element in list2:
+                        element[1] = element[1] * idf
+
                 ind_of_ind[index_two_keys[index2]] = mergedFile.tell() 
                 list2 = json.dumps(list2) + "\n"
                 mergedFile.write(list2)
@@ -91,6 +113,12 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
                 offset1 = index_one[index_one_keys[index1]] 
                 dataFile1.seek(offset1)
                 list1 = json.loads(dataFile1.readline()) # postings lists1
+
+                if(new_file == "finalmerge.txt"):
+                    idf = math.log( (55393.0 / len(list1)) , 10)
+                    for element in list1:
+                        element[1] = element[1] * idf
+
                 ind_of_ind[index_one_keys[index1]] = mergedFile.tell() 
                 list1 = json.dumps(list1) + "\n"
                 mergedFile.write(list1)
@@ -105,6 +133,12 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
                 dataFile2.seek(offset2)
                 list2 = json.loads(dataFile2.readline()) # postings lists2
                 list1.extend(list2)                                   # merge and save into list1 
+
+                if(new_file == "finalmerge.txt"):
+                    idf = math.log( (55393.0 / len(list1)) , 10)
+                    for element in list1:
+                        element[1] = element[1] * idf
+
                 ind_of_ind[index_one_keys[index1]] = mergedFile.tell() 
                 list1 = json.dumps(list1) + "\n"
                 mergedFile.write(list1)                                 # write to a "new file"
@@ -118,6 +152,12 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
                 offset1 = index_one[index_one_keys[index1]] 
                 dataFile1.seek(offset1)
                 list1 = json.loads(dataFile1.readline()) # postings lists1
+                
+                if(new_file == "finalmerge.txt"):
+                    idf = math.log( (55393.0 / len(list1)) , 10)
+                    for element in list1:
+                        element[1] = element[1] * idf
+
                 ind_of_ind[index_one_keys[index1]] = mergedFile.tell() 
                 list1 = json.dumps(list1) + "\n"
                 mergedFile.write(list1)
@@ -128,6 +168,12 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
                 offset2 = index_two[index_two_keys[index2]] 
                 dataFile2.seek(offset2)
                 list2 = json.loads(dataFile2.readline()) # postings lists1
+
+                if(new_file == "finalmerge.txt"):
+                    idf = math.log( (55393.0 / len(list2)) , 10)
+                    for element in list2:
+                        element[1] = element[1] * idf
+
                 ind_of_ind[index_two_keys[index2]] = mergedFile.tell() 
                 list2 = json.dumps(list2) + "\n"
                 mergedFile.write(list2)
@@ -137,22 +183,23 @@ def mergeTwoFiles(file1, file1_ind, file2, file2_ind, new_file, new_file_ind):
     secondOpenedFile.close()
     mergedFile.close()
     mergedFile_ind.close()
-def combineTfIdf(path):
 
-    for root, directoryList, fileList in os.walk(path, topdown=False):
-        for file_name in fileList:
-            pathName = os.path.join(root, file_name)
+# def combineTfIdf(path):
 
-            openedFile = open(pathName, 'rb+')      
-            db = pickle.load(openedFile)
+#     for root, directoryList, fileList in os.walk(path, topdown=False):
+#         for file_name in fileList:
+#             pathName = os.path.join(root, file_name)
 
-            for dbIndex in range(len(db)):
-                db[dbIndex][1] = db[dbIndex][1] * math.log(55,393/len(db))
+#             openedFile = open(pathName, 'rb+')      
+#             db = pickle.load(openedFile)
+
+#             for dbIndex in range(len(db)):
+#                 db[dbIndex][1] = db[dbIndex][1] * math.log(55393.0/len(db))
 
 
-            openedFile.seek(0)
-            pickle.dump(db, openedFile)
-            openedFile.close()
+#             openedFile.seek(0)
+#             pickle.dump(db, openedFile)
+#             openedFile.close()
 
 def countTokens(path):
     counter = 0
@@ -162,7 +209,7 @@ def countTokens(path):
     return counter
 
 if __name__ == '__main__':
-    # parseDocumentStorage("Example Document Database")
+    parseDocumentStorage("DEV")
     # with open("3ind.txt", "r") as checkFile:
     #     indexOfIndex = json.load(checkFile)
 
@@ -175,6 +222,6 @@ if __name__ == '__main__':
     #     urls = json.load(checkFile)
     #     for docid,url in urls.items():
     #         print(docid,url,type(docid))
-    # mergeTwoFiles("1.txt","1ind.txt","2.txt","2ind.txt","merged.txt","mergedind.txt")
-    # mergeTwoFiles("merged.txt","mergedind.txt","3.txt","3ind.txt","finalmerge.txt","finalmergedind.txt")
+    mergeTwoFiles("1.txt","1ind.txt","2.txt","2ind.txt","merged.txt","mergedind.txt")
+    mergeTwoFiles("merged.txt","mergedind.txt","3.txt","3ind.txt","finalmerge.txt","finalmergedind.txt")
     
